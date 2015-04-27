@@ -1,0 +1,32 @@
+{
+  "name": "djax-client",
+  "version": "0.1.0",
+  "description": "A straightforward services client powered by djax.",
+  "main": "djax-client.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yomguithereal/djax-client"
+  },
+  "keywords": [
+    "client",
+    "xhr",
+    "ajax",
+    "djax",
+    "services"
+  ],
+  "author": {
+    "name": "Guillaume Plique",
+    "url": "http://github.com/Yomguithereal"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Yomguithereal/djax-client/issues"
+  },
+  "homepage": "https://github.com/Yomguithereal/djax-client",
+  "dependencies": {
+    "djax": "^1.0.2"
+  }
+}
