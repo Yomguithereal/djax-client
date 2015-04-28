@@ -10,9 +10,12 @@ describe('Client', function() {
 
   describe('API', function() {
     var client = new Client({
+      settings: {
+        baseUrl: 'http://localhost:7337'
+      },
       services: {
         basic: {
-          url: 'http://localhost:7337/basic'
+          url: '/basic'
         }
       }
     });
@@ -39,6 +42,33 @@ describe('Client', function() {
       assert('then' in promise);
       assert('fail' in promise);
       assert('done' in promise);
+    });
+
+    it('should be possible to request through the engine directly.', function(done) {
+
+      assert.throws(function() {
+        client.request({hello: 'world'});
+      }, /no url/);
+
+      assert.throws(function() {
+        client.request(Function.prototype);
+      }, /no url/);
+
+      assert.throws(function() {
+        client.request();
+      }, /no url/);
+
+      client.request({url: '/basic'}, function(data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    it('should normalize correctly the baseUrl + url target.', function(done) {
+      client.request({url: 'basic'}, function(data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
     });
   });
 });

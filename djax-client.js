@@ -32,18 +32,17 @@ function solve(o, definitions, scope) {
   }
 }
 
-function bind(o, scope) {
-  var b = {},
-      k;
+function stripSlash(url, leading) {
+  if (leading)
+    return url.charAt(0) === '/' ? url.slice(1) : url;
+  else
+    return url.slice(-1) === '/' ? url.slice(0, -1) : url;
+}
 
-  for (k in o) {
-    if (!blackList(k))
-      b[k] = o[k];
-    else
-      b[k] = o[k].bind(scope);
-  }
-
-  return b;
+function joinUrls(...urls) {
+  return urls.reduce(function(a, b) {
+    return [stripSlash(a), stripSlash(b, true)].join('/');
+  });
 }
 
 /**
@@ -59,8 +58,8 @@ export default class Client {
                services = {}}) {
 
     // Basic properties
-    this._settings = bind(settings, scope);
-    this._definitions = bind(define, scope);
+    this._settings = settings;
+    this._definitions = define;
     this._engine = engine;
     this._scope = scope;
     this._services = services;
@@ -71,7 +70,7 @@ export default class Client {
 
   // Registering a service
   register(name, options = {}) {
-    const boundOptions = bind(options, this._scope);
+    const boundOptions = options;
 
     this._services[name] = boundOptions;
     this[name] = this.request.bind(this, name, boundOptions);
@@ -80,10 +79,32 @@ export default class Client {
   // Requesting a service
   request(name, options, callback) {
 
-    // Polymorphism
+    // Handling polymorphism
     if (arguments.length < 3) {
-      callback = options;
-      options = {};
+      if (typeof options === 'function') {
+        callback = options;
+      }
+
+      if (typeof name !== 'string') {
+        options = name;
+        name = null;
+      }
+      else {
+        options = {};
+      }
+    }
+
+    if (arguments.length < 2) {
+      if (typeof name === 'function') {
+        callback = name;
+        name = null;
+        options = {};
+      }
+      else if (typeof name === 'object') {
+        options = name;
+        name = null;
+        callback = null;
+      }
     }
 
     // Safeguard
@@ -91,11 +112,18 @@ export default class Client {
 
     const service = this._services[name];
 
-    if (!service)
+    if (!service && name)
       throw Error('djax-client.request: inexistent service.');
 
     // Merging
     const ajaxOptions = assign({}, this._settings, service, options);
+
+    // Base url
+    if (!ajaxOptions.url)
+      throw Error('djax-client.request: no url was provided.');
+
+    if (this._settings.baseUrl)
+      ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 
     // Calling
     return this._engine(ajaxOptions).done(callback);
