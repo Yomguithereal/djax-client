@@ -21,12 +21,15 @@ var _djax = require('djax');
 
 var _djax2 = _interopRequireDefault(_djax);
 
+var _assign = require('object-assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
 /**
  * Defaults
  */
-var blackList = ['beforeSend', 'success', 'error'];
-blackList.has = function (x) {
-  return !! ~undefined.indexOf(x);
+var blackList = function blackList(x) {
+  return !! ~['beforeSend', 'success', 'error'].indexOf(x);
 };
 
 var defaults = {
@@ -42,7 +45,7 @@ function solve(o, definitions, scope) {
       k;
 
   for (k in o) {
-    if (blackList.has(k) || typeof o[k] !== 'function') s[k] = o[k];else s[k] = o[k].call(scope);
+    if (blackList(k) || typeof o[k] !== 'function') s[k] = o[k];else s[k] = o[k].call(scope);
   }
 }
 
@@ -51,7 +54,7 @@ function bind(o, scope) {
       k;
 
   for (k in o) {
-    if (!blackList.has(k)) b[k] = o[k];else b[k] = o[k].bind(scope);
+    if (!blackList(k)) b[k] = o[k];else b[k] = o[k].bind(scope);
   }
 
   return b;
@@ -121,14 +124,15 @@ var Client = (function () {
       // Safeguard
       callback = callback || Function.prototype;
 
-      var service = this._service[name];
+      var service = this._services[name];
 
       if (!service) throw Error('djax-client.request: inexistent service.');
 
       // Merging
-      var ajaxOptions = Object.assign({}, this._defaults, service, options);
+      var ajaxOptions = _assign2['default']({}, this._settings, service, options);
 
-      return this._engine(ajaxOptions, callback);
+      // Calling
+      return this._engine(ajaxOptions).done(callback);
     }
   }]);
 
@@ -138,7 +142,7 @@ var Client = (function () {
 exports['default'] = Client;
 module.exports = exports['default'];
 
-},{"djax":2}],2:[function(require,module,exports){
+},{"djax":2,"object-assign":3}],2:[function(require,module,exports){
 (function(undefined) {
   'use strict';
 
@@ -270,6 +274,11 @@ module.exports = exports['default'];
       }
     };
 
+    // Check xhrFields
+    if (opt.xhrFields && typeof opt.xhrFields === 'object')
+      for (key in opt.xhrFields)
+        xhr[key] = opt.xhrFields[key];
+
     xhr.open(type, url, true);
     xhr.setRequestHeader('Content-Type', contentType);
 
@@ -352,8 +361,10 @@ module.exports = exports['default'];
       return this;
     };
     xhr.then = function(success, error) {
-      this.done(success);
-      this.fail(error);
+      if (success)
+        this.done(success);
+      if (error)
+        this.fail(error);
 
       // If the call has already been received:
       if (done)
@@ -375,7 +386,7 @@ module.exports = exports['default'];
   }
 
   // Djax version:
-  ajax.version = '1.0.2';
+  ajax.version = '1.1.0';
 
   // Check XMLHttpRequest presence:
   if (typeof XMLHttpRequest !== 'undefined')
@@ -385,14 +396,42 @@ module.exports = exports['default'];
   if (typeof exports !== 'undefined') {
     if (typeof module !== 'undefined' && module.exports)
       exports = module.exports = ajax;
-    exports.ajax = ajax;
+    exports.djax = ajax;
   } else if (typeof define === 'function' && define.amd)
     define('djax', [], function() {
       return ajax;
     });
   else
-    this.ajax = ajax;
+    this.djax = ajax;
 }).call(this);
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
+function ToObject(val) {
+	if (val == null) {
+		throw new TypeError('Object.assign cannot be called with null or undefined');
+	}
+
+	return Object(val);
+}
+
+module.exports = Object.assign || function (target, source) {
+	var from;
+	var keys;
+	var to = ToObject(target);
+
+	for (var s = 1; s < arguments.length; s++) {
+		from = arguments[s];
+		keys = Object.keys(Object(from));
+
+		for (var i = 0; i < keys.length; i++) {
+			to[keys[i]] = from[keys[i]];
+		}
+	}
+
+	return to;
+};
 
 },{}]},{},[1])(1)
 });

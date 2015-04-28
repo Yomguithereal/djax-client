@@ -5,12 +5,12 @@
  * A straightforward services client powered by djax.
  */
 import djax from 'djax';
+import assign from 'object-assign';
 
 /**
  * Defaults
  */
-const blackList = ['beforeSend', 'success', 'error'];
-blackList.has = x => !!~this.indexOf(x);
+const blackList = x => !!~['beforeSend', 'success', 'error'].indexOf(x);
 
 const defaults = {
   method: 'GET',
@@ -25,7 +25,7 @@ function solve(o, definitions, scope) {
       k;
 
   for (k in o) {
-    if (blackList.has(k) || typeof o[k] !== 'function')
+    if (blackList(k) || typeof o[k] !== 'function')
       s[k] = o[k];
     else
       s[k] = o[k].call(scope);
@@ -37,7 +37,7 @@ function bind(o, scope) {
       k;
 
   for (k in o) {
-    if (!blackList.has(k))
+    if (!blackList(k))
       b[k] = o[k];
     else
       b[k] = o[k].bind(scope);
@@ -89,14 +89,15 @@ export default class Client {
     // Safeguard
     callback = callback || Function.prototype;
 
-    const service = this._service[name];
+    const service = this._services[name];
 
     if (!service)
       throw Error('djax-client.request: inexistent service.');
 
     // Merging
-    const ajaxOptions = Object.assign({}, this._defaults, service, options);
+    const ajaxOptions = assign({}, this._settings, service, options);
 
-    return this._engine(ajaxOptions, callback);
+    // Calling
+    return this._engine(ajaxOptions).done(callback);
   }
 }

@@ -14,6 +14,7 @@ var gulp = require('gulp'),
 gulp.task('build-tests', function() {
   return browserify({
     entries: './test/unit.js',
+    debug: true
   }).transform(babelify)
     .bundle()
     .pipe(source('djax-client.unit.js'))
@@ -24,11 +25,18 @@ gulp.task('build-tests', function() {
 gulp.task('test', ['build-tests'], function() {
   var server = api.listen(7337);
 
+  var close = function() {server.close();};
+
   return gulp.src('./test/unit.html')
     .pipe(mocha({reportert: 'spec'}))
-    .on('end', function() {
-      server.close();
-    });
+    .on('error', close)
+    .on('end', close);
+});
+
+// Watching
+gulp.task('watch-tests', ['build-tests'], function() {
+  api.listen(7337);
+  gulp.watch(['./djax-client.js', './test/unit.js'], ['build-tests']);
 });
 
 // Building
