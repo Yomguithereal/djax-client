@@ -27,8 +27,8 @@ gulp.task('test', ['build-tests'], function() {
 
   var close = function() {server.close();};
 
-  return gulp.src('./test/unit.html')
-    .pipe(mocha({reportert: 'spec'}))
+  return gulp.src('http://localhost:7337/unit.html')
+    .pipe(mocha({reporter: 'spec'}))
     .on('error', close)
     .on('end', close);
 });

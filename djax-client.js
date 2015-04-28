@@ -25,11 +25,30 @@ function solve(o, definitions, scope) {
       k;
 
   for (k in o) {
-    if (blackList(k) || typeof o[k] !== 'function')
+    if (blackList(k) || typeof o[k] !== 'function') {
+
+      // TODO: solve parameters here, coming from definitions plus parameters
+      // TODO: merge define --> settings: params
+      // TODO: must check that return is either string or number
       s[k] = o[k];
+    }
     else
       s[k] = o[k].call(scope);
   }
+}
+
+function bind(o, scope) {
+  var b = {},
+      k;
+
+  for (k in o) {
+    if (blackList(k) && typeof k === 'function')
+      b[k] = o[k].bind(scope);
+    else
+      b[k] = o[k];
+  }
+
+  return b;
 }
 
 function stripSlash(url, leading) {
@@ -58,8 +77,8 @@ export default class Client {
                services = {}}) {
 
     // Basic properties
-    this._settings = settings;
-    this._definitions = define;
+    this._settings = bind(settings);
+    this._definitions = bind(define);
     this._engine = engine;
     this._scope = scope;
     this._services = services;
@@ -70,7 +89,7 @@ export default class Client {
 
   // Registering a service
   register(name, options = {}) {
-    const boundOptions = options;
+    const boundOptions = bind(options);
 
     this._services[name] = boundOptions;
     this[name] = this.request.bind(this, name, boundOptions);
@@ -116,7 +135,11 @@ export default class Client {
       throw Error('djax-client.request: inexistent service.');
 
     // Merging
-    const ajaxOptions = assign({}, this._settings, service, options);
+    const ajaxOptions = assign({},
+      this._settings,
+      service,
+      options
+    );
 
     // Base url
     if (!ajaxOptions.url)
