@@ -4,3 +4,5 @@ node_modules
 .gitignore
 .npmignore
 test
+djax-client.js
+djax-client.min.js
