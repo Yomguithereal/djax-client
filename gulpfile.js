@@ -25,12 +25,15 @@ gulp.task('build-tests', function() {
 gulp.task('test', ['build-tests'], function() {
   var server = api.listen(7337);
 
-  var close = function() {server.close();};
+  var close = function() {server.close();},
+      stream = mocha();
 
-  return gulp.src('http://localhost:7337/unit.html')
-    .pipe(mocha({reporter: 'spec'}))
-    .on('error', close)
-    .on('end', close);
+  stream.write({path: 'http://localhost:7337/static/unit.html'});
+  stream.on('error', close);
+  stream.on('end', close);
+  stream.end();
+
+  return stream;
 });
 
 // Watching
