@@ -184,7 +184,7 @@ var Client = (function () {
       if (!service && name) throw Error('djax-client.request: inexistent service.');
 
       // Merging
-      var ajaxOptions = _assign2['default']({}, this._settings, service, options);
+      var ajaxOptions = _assign2['default']({}, this._defaults, service, options);
 
       // Base url
       if (!ajaxOptions.url) throw Error('djax-client.request: no url was provided.');
