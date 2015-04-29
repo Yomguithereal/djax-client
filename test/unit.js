@@ -106,6 +106,7 @@ describe('Client', function() {
 
     // Recursive
     // Merge params
+    // Do not fail the port
   });
 
   describe('Defaults', function() {

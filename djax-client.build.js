@@ -38,29 +38,30 @@ var DEFAULTS = {
 
 var DEFAULT_SETTINGS = {
   baseUrl: null,
-  solver: /\:([^\/]+)/
+  solver: /\:([^/:]+)/g
 };
 
 /**
  * Helpers
  */
-function solve(o, definitions, scope) {
+function isPlainObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Function);
+};
+
+// TODO: must check that return is either string or number
+function solve(o, solver, definitions, scope) {
   var s = {},
       k;
 
   for (k in o) {
     if (typeof o[k] === 'function' && !blackList(k)) {
-
-      // TODO: merge define --> settings: params
-      // TODO: must check that return is either string or number
-      // TODO: recursive solving
-      // TODO: merge definitions with given params
       s[k] = o[k].call(scope);
     } else if (typeof o[k] === 'string') {
 
+      // TODO: check parameters
       s[k] = o[k];
     } else {
-      s[k] = o[k];
+      if (isPlainObject(o[k])) s[k] = solve(o[k], definitions, scope);else s[k] = o[k];
     }
   }
 
@@ -192,7 +193,7 @@ var Client = (function () {
       if (!ajaxOptions.url) throw Error('djax-client.request: no url was provided.');
 
       // Solving
-      ajaxOptions = solve(ajaxOptions, _assign2['default']({}, options.params, this._definitions), this._settings.scope || null);
+      ajaxOptions = solve(ajaxOptions, this._settings.solver, _assign2['default']({}, options.params, this._definitions), this._settings.scope || null);
 
       if (this._settings.baseUrl) ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 
