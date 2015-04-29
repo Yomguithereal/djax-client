@@ -107,6 +107,24 @@ describe('Client', function() {
 
   describe('Defaults', function() {
 
+    it('should be possible to set any defaults.', function(done) {
+      var client = new Client({
+        settings: {
+          baseUrl: 'http://localhost:7337'
+        },
+        defaults: {
+          url: '/basic'
+        },
+        services: {
+          basic: {}
+        }
+      });
+
+      client.request('basic', function(err, data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
   });
 
   describe('Settings', function() {

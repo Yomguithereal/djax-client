@@ -147,7 +147,7 @@ export default class Client {
 
     // Merging
     let ajaxOptions = assign({},
-      this._settings,
+      this._defaults,
       service,
       options
     );
