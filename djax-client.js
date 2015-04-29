@@ -29,17 +29,20 @@ function solve(o, definitions, scope) {
       k;
 
   for (k in o) {
-    if (blackList(k) || typeof o[k] !== 'function') {
-      s[k] = o[k];
-    }
-    else {
+    if (typeof o[k] === 'function' && !blackList(k)) {
 
-      // TODO: solve parameters here, coming from definitions plus parameters
       // TODO: merge define --> settings: params
       // TODO: must check that return is either string or number
       // TODO: recursive solving
       // TODO: merge definitions with given params
       s[k] = o[k].call(scope);
+    }
+    else if (typeof o[k] === 'string') {
+
+      s[k] = o[k];
+    }
+    else {
+      s[k] = o[k];
     }
   }
 

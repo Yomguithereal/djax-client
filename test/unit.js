@@ -103,6 +103,9 @@ describe('Client', function() {
         done();
       });
     });
+
+    // Recursive
+    // Merge params
   });
 
   describe('Defaults', function() {
