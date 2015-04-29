@@ -4,6 +4,7 @@
  *
  */
 import assert from 'assert';
+import jquery from 'jquery';
 import Client from '../djax-client.js';
 
 describe('Client', function() {
@@ -29,7 +30,8 @@ describe('Client', function() {
     });
 
     it('services should be bound to the client.', function(done) {
-      client.basic(function(data) {
+      client.basic(function(err, data) {
+        assert(err === null);
         assert.deepEqual(data, {hello: 'world'});
         done();
       });
@@ -58,14 +60,99 @@ describe('Client', function() {
         client.request();
       }, /no url/);
 
-      client.request({url: '/basic'}, function(data) {
+      client.request({url: '/basic'}, function(err, data) {
+        assert(err === null);
         assert.deepEqual(data, {hello: 'world'});
         done();
       });
     });
 
     it('should normalize correctly the baseUrl + url target.', function(done) {
-      client.request({url: 'basic'}, function(data) {
+      client.request({url: 'basic'}, function(err, data) {
+        assert(err === null);
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    it('should expose an error on fail.', function(done) {
+      var xhr = client.request({url: '/inexistent'}, function(err, data) {
+        assert.strictEqual(err.message, 'error');
+        assert(err.xhr === xhr);
+        done();
+      });
+    });
+  });
+
+  describe('Solving', function() {
+    var client = new Client({
+      settings: {
+        baseUrl: 'http://localhost:7337'
+      },
+      services: {
+        basic: {
+          url: function() {
+            return '/basic';
+          }
+        }
+      }
+    });
+
+    it('should be possible to solve functions.', function(done) {
+      client.basic(function() {
+        done();
+      });
+    });
+  });
+
+  describe('Defaults', function() {
+
+  });
+
+  describe('Settings', function() {
+
+    it('should be possible to bind the client to a scope.', function(done) {
+      var scope = {
+        method: 'GET',
+        test: true
+      };
+
+      var client = new Client({
+        settings: {
+          baseUrl: 'http://localhost:7337',
+          scope: scope
+        },
+        services: {
+          basic: {
+            url: '/basic',
+            method: function() {
+              return this.method;
+            },
+            success: function() {
+              assert(this.test);
+              return done();
+            }
+          }
+        }
+      });
+
+      client.basic();
+    });
+
+    it('should be possible to set another engine.', function(done) {
+      var client = new Client({
+        settings: {
+          engine: jquery.ajax,
+        },
+        services: {
+          basic: {
+            url: '/basic'
+          }
+        }
+      });
+
+      client.request('basic', function(err, data) {
+        assert(err === null);
         assert.deepEqual(data, {hello: 'world'});
         done();
       });

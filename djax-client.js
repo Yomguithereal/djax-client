@@ -12,8 +12,12 @@ import assign from 'object-assign';
  */
 const blackList = x => !!~['beforeSend', 'success', 'error'].indexOf(x);
 
-const defaults = {
-  method: 'GET',
+const DEFAULTS = {
+  method: 'GET'
+};
+
+const DEFAULT_SETTINGS = {
+  baseUrl: null,
   solver: /\:([^\/]+)/
 };
 
@@ -26,15 +30,20 @@ function solve(o, definitions, scope) {
 
   for (k in o) {
     if (blackList(k) || typeof o[k] !== 'function') {
+      s[k] = o[k];
+    }
+    else {
 
       // TODO: solve parameters here, coming from definitions plus parameters
       // TODO: merge define --> settings: params
       // TODO: must check that return is either string or number
-      s[k] = o[k];
-    }
-    else
+      // TODO: recursive solving
+      // TODO: merge definitions with given params
       s[k] = o[k].call(scope);
+    }
   }
+
+  return s;
 }
 
 function bind(o, scope) {
@@ -42,7 +51,7 @@ function bind(o, scope) {
       k;
 
   for (k in o) {
-    if (blackList(k) && typeof k === 'function')
+    if (blackList(k) && typeof o[k] === 'function')
       b[k] = o[k].bind(scope);
     else
       b[k] = o[k];
@@ -70,16 +79,18 @@ function joinUrls(...urls) {
 export default class Client {
 
   // Initialization
-  constructor({settings = defaults,
+  constructor({settings = DEFAULT_SETTINGS,
+               defaults = DEFAULTS,
                define = {},
-               engine = djax,
-               scope = null,
                services = {}}) {
 
+    const scope = settings.scope || null;
+
     // Basic properties
-    this._settings = bind(settings);
-    this._definitions = bind(define);
-    this._engine = engine;
+    this._settings = settings;
+    this._defaults = bind(defaults, scope);
+    this._definitions = bind(define, scope);
+    this._engine = this._settings.engine || djax;
     this._scope = scope;
     this._services = services;
 
@@ -89,7 +100,7 @@ export default class Client {
 
   // Registering a service
   register(name, options = {}) {
-    const boundOptions = bind(options);
+    const boundOptions = bind(options, this._settings.scope || null);
 
     this._services[name] = boundOptions;
     this[name] = this.request.bind(this, name, boundOptions);
@@ -135,7 +146,7 @@ export default class Client {
       throw Error('djax-client.request: inexistent service.');
 
     // Merging
-    const ajaxOptions = assign({},
+    let ajaxOptions = assign({},
       this._settings,
       service,
       options
@@ -145,10 +156,26 @@ export default class Client {
     if (!ajaxOptions.url)
       throw Error('djax-client.request: no url was provided.');
 
+    // Solving
+    ajaxOptions = solve(
+      ajaxOptions,
+      assign({}, options.params, this._definitions),
+      this._settings.scope || null
+    );
+
     if (this._settings.baseUrl)
       ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 
     // Calling
-    return this._engine(ajaxOptions).done(callback);
+    return this._engine(ajaxOptions)
+      .fail(function(xhr, errorMsg) {
+        var e = new Error(errorMsg);
+        e.xhr = xhr;
+
+        return callback(e);
+      })
+      .done(function(data) {
+        return callback(null, data);
+      });
   }
 }

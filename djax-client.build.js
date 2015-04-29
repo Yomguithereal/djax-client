@@ -32,8 +32,12 @@ var blackList = function blackList(x) {
   return !! ~['beforeSend', 'success', 'error'].indexOf(x);
 };
 
-var defaults = {
-  method: 'GET',
+var DEFAULTS = {
+  method: 'GET'
+};
+
+var DEFAULT_SETTINGS = {
+  baseUrl: null,
   solver: /\:([^\/]+)/
 };
 
@@ -45,8 +49,31 @@ function solve(o, definitions, scope) {
       k;
 
   for (k in o) {
-    if (blackList(k) || typeof o[k] !== 'function') s[k] = o[k];else s[k] = o[k].call(scope);
+    if (blackList(k) || typeof o[k] !== 'function') {
+      s[k] = o[k];
+    } else {
+
+      // TODO: solve parameters here, coming from definitions plus parameters
+      // TODO: merge define --> settings: params
+      // TODO: must check that return is either string or number
+      // TODO: recursive solving
+      // TODO: merge definitions with given params
+      s[k] = o[k].call(scope);
+    }
   }
+
+  return s;
+}
+
+function bind(o, scope) {
+  var b = {},
+      k;
+
+  for (k in o) {
+    if (blackList(k) && typeof o[k] === 'function') b[k] = o[k].bind(scope);else b[k] = o[k];
+  }
+
+  return b;
 }
 
 function stripSlash(url, leading) {
@@ -79,22 +106,23 @@ var Client = (function () {
     var _this = this;
 
     var _ref$settings = _ref.settings;
-    var settings = _ref$settings === undefined ? defaults : _ref$settings;
+    var settings = _ref$settings === undefined ? DEFAULT_SETTINGS : _ref$settings;
+    var _ref$defaults = _ref.defaults;
+    var defaults = _ref$defaults === undefined ? DEFAULTS : _ref$defaults;
     var _ref$define = _ref.define;
     var define = _ref$define === undefined ? {} : _ref$define;
-    var _ref$engine = _ref.engine;
-    var engine = _ref$engine === undefined ? _djax2['default'] : _ref$engine;
-    var _ref$scope = _ref.scope;
-    var scope = _ref$scope === undefined ? null : _ref$scope;
     var _ref$services = _ref.services;
     var services = _ref$services === undefined ? {} : _ref$services;
 
     _classCallCheck(this, Client);
 
+    var scope = settings.scope || null;
+
     // Basic properties
     this._settings = settings;
-    this._definitions = define;
-    this._engine = engine;
+    this._defaults = bind(defaults, scope);
+    this._definitions = bind(define, scope);
+    this._engine = this._settings.engine || _djax2['default'];
     this._scope = scope;
     this._services = services;
 
@@ -111,7 +139,7 @@ var Client = (function () {
     value: function register(name) {
       var options = arguments[1] === undefined ? {} : arguments[1];
 
-      var boundOptions = options;
+      var boundOptions = bind(options, this._settings.scope || null);
 
       this._services[name] = boundOptions;
       this[name] = this.request.bind(this, name, boundOptions);
@@ -161,10 +189,20 @@ var Client = (function () {
       // Base url
       if (!ajaxOptions.url) throw Error('djax-client.request: no url was provided.');
 
+      // Solving
+      ajaxOptions = solve(ajaxOptions, _assign2['default']({}, options.params, this._definitions), this._settings.scope || null);
+
       if (this._settings.baseUrl) ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 
       // Calling
-      return this._engine(ajaxOptions).done(callback);
+      return this._engine(ajaxOptions).fail(function (xhr, errorMsg) {
+        var e = new Error(errorMsg);
+        e.xhr = xhr;
+
+        return callback(e);
+      }).done(function (data) {
+        return callback(null, data);
+      });
     }
   }]);
 
