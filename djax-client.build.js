@@ -212,7 +212,7 @@ var Client = (function () {
 
       var service = this._services[name];
 
-      if (!service && name) throw Error('djax-client.request: inexistent service.');
+      if (!service && name) throw Error('djax-client.request: service not found.');
 
       // Merging
       var ajaxOptions = _assign2['default']({}, this._defaults, service, options);

@@ -180,7 +180,7 @@ export default class Client {
     const service = this._services[name];
 
     if (!service && name)
-      throw Error('djax-client.request: inexistent service.');
+      throw Error('djax-client.request: service not found.');
 
     // Merging
     let ajaxOptions = assign({},
