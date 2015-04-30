@@ -12,12 +12,11 @@ import assign from 'object-assign';
  */
 const blackList = x => !!~['beforeSend', 'success', 'error'].indexOf(x);
 
-const DEFAULTS = {
-  method: 'GET'
-};
+const DEFAULTS = {};
 
 const DEFAULT_SETTINGS = {
   baseUrl: null,
+  engine: djax,
   solver: /\:([^/:]+)/g
 };
 
@@ -33,7 +32,7 @@ function isPlainObject(value) {
 
 // TODO: must check that return is either string or number
 function solve(o, solver, definitions, scope) {
-  var s = {},
+  let s = {},
       k;
 
   for (k in o) {
@@ -42,12 +41,27 @@ function solve(o, solver, definitions, scope) {
     }
     else if (typeof o[k] === 'string') {
 
-      // TODO: check parameters
+      // Solving string parameters
       s[k] = o[k];
+
+      let match;
+      while ((match = solver.exec(o[k])) !== null) {
+        let [pattern, key] = match,
+            replacement = definitions[key];
+
+        if (typeof replacement === 'function')
+          replacement = replacement.call(scope);
+
+        if (replacement)
+          s[k] = s[k].replace(pattern, replacement);
+      }
+
+      // Resetting the solver's state
+      solver.lastIndex = 0;
     }
     else {
-      if (isPlainObject(o[k]))
-        s[k] = solve(o[k], definitions, scope);
+      if (k !== 'params' && isPlainObject(o[k]))
+        s[k] = solve(o[k], solver, definitions, scope);
       else
         s[k] = o[k];
     }
@@ -57,7 +71,7 @@ function solve(o, solver, definitions, scope) {
 }
 
 function bind(o, scope) {
-  var b = {},
+  let b = {},
       k;
 
   for (k in o) {
@@ -89,19 +103,18 @@ function joinUrls(...urls) {
 export default class Client {
 
   // Initialization
-  constructor({settings = DEFAULT_SETTINGS,
-               defaults = DEFAULTS,
+  constructor({settings = {},
+               defaults = {},
                define = {},
                services = {}}) {
 
     const scope = settings.scope || null;
 
     // Basic properties
-    this._settings = settings;
-    this._defaults = bind(defaults, scope);
+    this._settings = assign({}, DEFAULT_SETTINGS, settings);
+    this._defaults = bind(assign({}, DEFAULTS, defaults), scope);
     this._definitions = bind(define, scope);
-    this._engine = this._settings.engine || djax;
-    this._scope = scope;
+    this._engine = this._settings.engine;
     this._services = services;
 
     // Registering initial services
@@ -113,7 +126,18 @@ export default class Client {
     const boundOptions = bind(options, this._settings.scope || null);
 
     this._services[name] = boundOptions;
-    this[name] = this.request.bind(this, name, boundOptions);
+    this[name] = (o, callback) => {
+      let mergedOptions = isPlainObject(o) ?
+        assign({}, boundOptions, o) :
+        o || {};
+
+      if (typeof o === 'function') {
+        callback = o;
+        mergedOptions = boundOptions;
+      }
+
+      return this.request.call(this, name, mergedOptions, callback);
+    };
   }
 
   // Requesting a service
@@ -180,7 +204,7 @@ export default class Client {
     // Calling
     return this._engine(ajaxOptions)
       .fail(function(xhr, errorMsg) {
-        var e = new Error(errorMsg);
+        let e = new Error(errorMsg);
         e.xhr = xhr;
 
         return callback(e);

@@ -94,16 +94,29 @@ describe('Client', function() {
           url: function() {
             return '/basic';
           }
+        },
+        basicWithParam: {
+          url: '/:param'
         }
       }
     });
 
     it('should be possible to solve functions.', function(done) {
-      client.basic(function() {
+      client.basic(function(err, data) {
+        assert.deepEqual(data, {hello: 'world'});
         done();
       });
     });
 
+    it('should be possible to solve parameters.', function(done) {
+      client.basicWithParam({params: {param: 'basic'}}, function(err, data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    // Definitions
+    // Dynamic definitions
     // Recursive
     // Merge params
     // Do not fail the port
@@ -164,6 +177,7 @@ describe('Client', function() {
     it('should be possible to set another engine.', function(done) {
       var client = new Client({
         settings: {
+          baseUrl: 'http://localhost:7337',
           engine: jquery.ajax,
         },
         services: {

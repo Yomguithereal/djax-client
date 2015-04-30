@@ -3,6 +3,8 @@
 
 var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 
+var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } };
+
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -32,12 +34,11 @@ var blackList = function blackList(x) {
   return !! ~['beforeSend', 'success', 'error'].indexOf(x);
 };
 
-var DEFAULTS = {
-  method: 'GET'
-};
+var DEFAULTS = {};
 
 var DEFAULT_SETTINGS = {
   baseUrl: null,
+  engine: _djax2['default'],
   solver: /\:([^/:]+)/g
 };
 
@@ -51,17 +52,33 @@ function isPlainObject(value) {
 // TODO: must check that return is either string or number
 function solve(o, solver, definitions, scope) {
   var s = {},
-      k;
+      k = undefined;
 
   for (k in o) {
     if (typeof o[k] === 'function' && !blackList(k)) {
       s[k] = o[k].call(scope);
     } else if (typeof o[k] === 'string') {
 
-      // TODO: check parameters
+      // Solving string parameters
       s[k] = o[k];
+
+      var match = undefined;
+      while ((match = solver.exec(o[k])) !== null) {
+        var _match = _slicedToArray(match, 2);
+
+        var pattern = _match[0];
+        var key = _match[1];
+        var replacement = definitions[key];
+
+        if (typeof replacement === 'function') replacement = replacement.call(scope);
+
+        if (replacement) s[k] = s[k].replace(pattern, replacement);
+      }
+
+      // Resetting the solver's state
+      solver.lastIndex = 0;
     } else {
-      if (isPlainObject(o[k])) s[k] = solve(o[k], definitions, scope);else s[k] = o[k];
+      if (k !== 'params' && isPlainObject(o[k])) s[k] = solve(o[k], solver, definitions, scope);else s[k] = o[k];
     }
   }
 
@@ -70,7 +87,7 @@ function solve(o, solver, definitions, scope) {
 
 function bind(o, scope) {
   var b = {},
-      k;
+      k = undefined;
 
   for (k in o) {
     if (blackList(k) && typeof o[k] === 'function') b[k] = o[k].bind(scope);else b[k] = o[k];
@@ -109,9 +126,9 @@ var Client = (function () {
     var _this = this;
 
     var _ref$settings = _ref.settings;
-    var settings = _ref$settings === undefined ? DEFAULT_SETTINGS : _ref$settings;
+    var settings = _ref$settings === undefined ? {} : _ref$settings;
     var _ref$defaults = _ref.defaults;
-    var defaults = _ref$defaults === undefined ? DEFAULTS : _ref$defaults;
+    var defaults = _ref$defaults === undefined ? {} : _ref$defaults;
     var _ref$define = _ref.define;
     var define = _ref$define === undefined ? {} : _ref$define;
     var _ref$services = _ref.services;
@@ -122,11 +139,10 @@ var Client = (function () {
     var scope = settings.scope || null;
 
     // Basic properties
-    this._settings = settings;
-    this._defaults = bind(defaults, scope);
+    this._settings = _assign2['default']({}, DEFAULT_SETTINGS, settings);
+    this._defaults = bind(_assign2['default']({}, DEFAULTS, defaults), scope);
     this._definitions = bind(define, scope);
-    this._engine = this._settings.engine || _djax2['default'];
-    this._scope = scope;
+    this._engine = this._settings.engine;
     this._services = services;
 
     // Registering initial services
@@ -140,12 +156,23 @@ var Client = (function () {
 
     // Registering a service
     value: function register(name) {
+      var _this2 = this;
+
       var options = arguments[1] === undefined ? {} : arguments[1];
 
       var boundOptions = bind(options, this._settings.scope || null);
 
       this._services[name] = boundOptions;
-      this[name] = this.request.bind(this, name, boundOptions);
+      this[name] = function (o, callback) {
+        var mergedOptions = isPlainObject(o) ? _assign2['default']({}, boundOptions, o) : o || {};
+
+        if (typeof o === 'function') {
+          callback = o;
+          mergedOptions = boundOptions;
+        }
+
+        return _this2.request.call(_this2, name, mergedOptions, callback);
+      };
     }
   }, {
     key: 'request',
