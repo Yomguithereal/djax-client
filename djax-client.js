@@ -28,9 +28,8 @@ function isPlainObject(value) {
          typeof value === 'object' &&
          !Array.isArray(value) &&
          !(value instanceof Function);
-};
+}
 
-// TODO: must check that return is either string or number
 function solve(o, solver, definitions, scope) {
   let s = {},
       k;
@@ -123,13 +122,16 @@ export default class Client {
 
   // Registering a service
   register(name, options = {}) {
-    const boundOptions = bind(options, this._settings.scope || null);
+    if (typeof options === 'string')
+      options = {url: options};
+
+    const boundOptions = bind(options, this._settings.scope || null);
 
     this._services[name] = boundOptions;
     this[name] = (o, callback) => {
       let mergedOptions = isPlainObject(o) ?
         assign({}, boundOptions, o) :
-        o || {};
+        o || {};
 
       if (typeof o === 'function') {
         callback = o;

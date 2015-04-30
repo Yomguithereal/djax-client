@@ -17,7 +17,8 @@ describe('Client', function() {
       services: {
         basic: {
           url: '/basic'
-        }
+        },
+        urlBasic: '/basic'
       }
     });
 
@@ -82,12 +83,28 @@ describe('Client', function() {
         done();
       });
     });
+
+    it('should be possible to use the url polymorphism.', function(done) {
+      client.urlBasic(function(err, data) {
+        assert(err === null);
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
   });
 
   describe('Solving', function() {
     var client = new Client({
       settings: {
         baseUrl: 'http://localhost:7337'
+      },
+      define: {
+        fragment: 'basic',
+        fragment2: 'data',
+        fnFragment: function() {
+          return 'basic';
+        },
+        value: 'world'
       },
       services: {
         basic: {
@@ -97,6 +114,27 @@ describe('Client', function() {
         },
         basicWithParam: {
           url: '/:param'
+        },
+        basicWithDefinition: {
+          url: '/:fragment'
+        },
+        basicWithFunctionDefinition: {
+          url: '/:fnFragment'
+        },
+        data: {
+          url: '/data',
+          type: 'POST',
+          data: {
+            hello: ':value',
+            bonjour: 'monde'
+          }
+        },
+        complexData: {
+          url: '/:fragment2',
+          type: 'POST',
+          data: {
+            bonjour: ':value'
+          }
         }
       }
     });
@@ -115,11 +153,51 @@ describe('Client', function() {
       });
     });
 
-    // Definitions
-    // Dynamic definitions
-    // Recursive
-    // Merge params
-    // Do not fail the port
+    it('should be possible to solve definitions.', function(done) {
+      client.basicWithDefinition(function(err, data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    it('should be possible to solve function definitions.', function(done) {
+      client.basicWithFunctionDefinition(function(err, data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    it('should be possible to solve recursive objects.', function(done) {
+      client.data(function(err, data) {
+        assert.deepEqual(data, {hello: 'world', bonjour: 'monde'});
+        done();
+      });
+    });
+
+    it('should be possible to solve both parameters and definitions.', function(done) {
+      client.complexData(function(err, data) {
+        assert.deepEqual(data, {bonjour: 'world'});
+        done();
+      });
+    });
+
+    it('should not solve unfound parameters.', function(done) {
+      var specialClient = new Client({
+        define: {
+          fragment: 'basic'
+        },
+        services: {
+          basic: {
+            url: 'http://localhost:7337/:fragment'
+          }
+        }
+      });
+
+      specialClient.basic(function(err, data) {
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
   });
 
   describe('Defaults', function() {

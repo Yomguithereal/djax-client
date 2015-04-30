@@ -47,9 +47,8 @@ var DEFAULT_SETTINGS = {
  */
 function isPlainObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Function);
-};
+}
 
-// TODO: must check that return is either string or number
 function solve(o, solver, definitions, scope) {
   var s = {},
       k = undefined;
@@ -159,6 +158,8 @@ var Client = (function () {
       var _this2 = this;
 
       var options = arguments[1] === undefined ? {} : arguments[1];
+
+      if (typeof options === 'string') options = { url: options };
 
       var boundOptions = bind(options, this._settings.scope || null);
 
