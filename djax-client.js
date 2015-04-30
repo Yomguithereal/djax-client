@@ -27,7 +27,8 @@ function isPlainObject(value) {
   return value &&
          typeof value === 'object' &&
          !Array.isArray(value) &&
-         !(value instanceof Function);
+         !(value instanceof Date) &&
+         !(value instanceof RegExp);
 }
 
 function solve(o, solver, definitions, scope) {
