@@ -6,6 +6,7 @@
   "scripts": {
     "build": "gulp build",
     "lint": "eslint ./djax-client.js",
+    "prepublish": "npm run build",
     "test": "gulp test",
     "work": "gulp watch-tests"
   },

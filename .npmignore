@@ -6,3 +6,5 @@ node_modules
 test
 djax-client.js
 djax-client.min.js
+.eslintrc
+gulpfile.js
