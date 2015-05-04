@@ -98,13 +98,15 @@ describe('Client', function() {
       settings: {
         baseUrl: 'http://localhost:7337'
       },
-      define: {
-        fragment: 'basic',
-        fragment2: 'data',
-        fnFragment: function() {
-          return 'basic';
-        },
-        value: 'world'
+      defaults: {
+        params: {
+          fragment: 'basic',
+          fragment2: 'data',
+          fnFragment: function() {
+            return 'basic';
+          },
+          value: 'world'
+        }
       },
       services: {
         basic: {
@@ -153,7 +155,7 @@ describe('Client', function() {
       });
     });
 
-    it('should be possible to solve definitions.', function(done) {
+    it('should be possible to solve default parameters.', function(done) {
       client.basicWithDefinition(function(err, data) {
         assert.deepEqual(data, {hello: 'world'});
         done();
@@ -183,8 +185,10 @@ describe('Client', function() {
 
     it('should not solve unfound parameters.', function(done) {
       var specialClient = new Client({
-        define: {
-          fragment: 'basic'
+        defaults: {
+          params: {
+            fragment: 'basic'
+          }
         },
         services: {
           basic: {

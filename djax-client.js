@@ -12,7 +12,9 @@ import assign from 'object-assign';
  */
 const blackList = x => !!~['beforeSend', 'success', 'error'].indexOf(x);
 
-const DEFAULTS = {};
+const DEFAULTS = {
+  params: {}
+};
 
 const DEFAULT_SETTINGS = {
   baseUrl: null,
@@ -105,7 +107,6 @@ export default class Client {
   // Initialization
   constructor({settings = {},
                defaults = {},
-               define = {},
                services = {}}) {
 
     const scope = settings.scope || null;
@@ -113,7 +114,6 @@ export default class Client {
     // Basic properties
     this._settings = assign({}, DEFAULT_SETTINGS, settings);
     this._defaults = bind(assign({}, DEFAULTS, defaults), scope);
-    this._definitions = bind(define, scope);
     this._engine = this._settings.engine;
     this._services = services;
 
@@ -197,7 +197,7 @@ export default class Client {
     ajaxOptions = solve(
       ajaxOptions,
       this._settings.solver,
-      assign({}, options.params, this._definitions),
+      assign({}, options.params, this._defaults.params),
       this._settings.scope || null
     );
 

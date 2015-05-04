@@ -34,7 +34,9 @@ var blackList = function blackList(x) {
   return !! ~['beforeSend', 'success', 'error'].indexOf(x);
 };
 
-var DEFAULTS = {};
+var DEFAULTS = {
+  params: {}
+};
 
 var DEFAULT_SETTINGS = {
   baseUrl: null,
@@ -128,8 +130,6 @@ var Client = (function () {
     var settings = _ref$settings === undefined ? {} : _ref$settings;
     var _ref$defaults = _ref.defaults;
     var defaults = _ref$defaults === undefined ? {} : _ref$defaults;
-    var _ref$define = _ref.define;
-    var define = _ref$define === undefined ? {} : _ref$define;
     var _ref$services = _ref.services;
     var services = _ref$services === undefined ? {} : _ref$services;
 
@@ -140,7 +140,6 @@ var Client = (function () {
     // Basic properties
     this._settings = _assign2['default']({}, DEFAULT_SETTINGS, settings);
     this._defaults = bind(_assign2['default']({}, DEFAULTS, defaults), scope);
-    this._definitions = bind(define, scope);
     this._engine = this._settings.engine;
     this._services = services;
 
@@ -221,7 +220,7 @@ var Client = (function () {
       if (!ajaxOptions.url) throw Error('djax-client.request: no url was provided.');
 
       // Solving
-      ajaxOptions = solve(ajaxOptions, this._settings.solver, _assign2['default']({}, options.params, this._definitions), this._settings.scope || null);
+      ajaxOptions = solve(ajaxOptions, this._settings.solver, _assign2['default']({}, options.params, this._defaults.params), this._settings.scope || null);
 
       if (this._settings.baseUrl) ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 
