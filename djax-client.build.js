@@ -1,31 +1,31 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.DjaxClient = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
-
-var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } };
-
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
 /**
  * Djax Services Client
  * =====================
  *
  * A straightforward services client powered by djax.
  */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _djax = require('djax');
 
 var _djax2 = _interopRequireDefault(_djax);
 
-var _assign = require('object-assign');
+var _objectAssign = require('object-assign');
 
-var _assign2 = _interopRequireDefault(_assign);
+var _objectAssign2 = _interopRequireDefault(_objectAssign);
 
 /**
  * Defaults
@@ -65,10 +65,12 @@ function solve(o, solver, definitions, scope) {
 
       var match = undefined;
       while ((match = solver.exec(o[k])) !== null) {
-        var _match = _slicedToArray(match, 2);
+        var _match = match;
 
-        var pattern = _match[0];
-        var key = _match[1];
+        var _match2 = _slicedToArray(_match, 2);
+
+        var pattern = _match2[0];
+        var key = _match2[1];
         var replacement = definitions[key];
 
         if (typeof replacement === 'function') replacement = replacement.call(scope);
@@ -98,11 +100,7 @@ function bind(o, scope) {
 }
 
 function stripSlash(url, leading) {
-  if (leading) {
-    return url.charAt(0) === '/' ? url.slice(1) : url;
-  } else {
-    return url.slice(-1) === '/' ? url.slice(0, -1) : url;
-  }
+  if (leading) return url.charAt(0) === '/' ? url.slice(1) : url;else return url.slice(-1) === '/' ? url.slice(0, -1) : url;
 }
 
 function joinUrls() {
@@ -138,8 +136,8 @@ var Client = (function () {
     var scope = settings.scope || null;
 
     // Basic properties
-    this._settings = _assign2['default']({}, DEFAULT_SETTINGS, settings);
-    this._defaults = bind(_assign2['default']({}, DEFAULTS, defaults), scope);
+    this._settings = (0, _objectAssign2['default'])({}, DEFAULT_SETTINGS, settings);
+    this._defaults = bind((0, _objectAssign2['default'])({}, DEFAULTS, defaults), scope);
     this._engine = this._settings.engine;
     this._services = services;
 
@@ -149,14 +147,14 @@ var Client = (function () {
     });
   }
 
+  // Registering a service
+
   _createClass(Client, [{
     key: 'register',
-
-    // Registering a service
     value: function register(name) {
       var _this2 = this;
 
-      var options = arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       if (typeof options === 'string') options = { url: options };
 
@@ -164,7 +162,7 @@ var Client = (function () {
 
       this._services[name] = boundOptions;
       this[name] = function (o, callback) {
-        var mergedOptions = isPlainObject(o) ? _assign2['default']({}, boundOptions, o) : o || {};
+        var mergedOptions = isPlainObject(o) ? (0, _objectAssign2['default'])({}, boundOptions, o) : o || {};
 
         if (typeof o === 'function') {
           callback = o;
@@ -174,10 +172,10 @@ var Client = (function () {
         return _this2.request.call(_this2, name, mergedOptions, callback);
       };
     }
-  }, {
-    key: 'request',
 
     // Requesting a service
+  }, {
+    key: 'request',
     value: function request(name, options, callback) {
 
       // Handling polymorphism
@@ -214,13 +212,13 @@ var Client = (function () {
       if (!service && name) throw Error('djax-client.request: service not found.');
 
       // Merging
-      var ajaxOptions = _assign2['default']({}, this._defaults, service, options);
+      var ajaxOptions = (0, _objectAssign2['default'])({}, this._defaults, service, options);
 
       // Base url
       if (!ajaxOptions.url) throw Error('djax-client.request: no url was provided.');
 
       // Solving
-      ajaxOptions = solve(ajaxOptions, this._settings.solver, _assign2['default']({}, options.params, this._defaults.params), this._settings.scope || null);
+      ajaxOptions = solve(ajaxOptions, this._settings.solver, (0, _objectAssign2['default'])({}, options.params, this._defaults.params), this._settings.scope || null);
 
       if (this._settings.baseUrl) ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 
@@ -291,7 +289,7 @@ module.exports = exports['default'];
         done = false,
         url = opt.url,
         xhr = new ajax.xhr(),
-        type = opt.type || 'GET',
+        type = opt.method || opt.type || 'GET',
         dataType = opt.dataType || 'json',
         contentType = opt.contentType || 'application/x-www-form-urlencoded';
 
@@ -486,7 +484,7 @@ module.exports = exports['default'];
   }
 
   // Djax version:
-  ajax.version = '1.1.0';
+  ajax.version = '1.2.0';
 
   // Check XMLHttpRequest presence:
   if (typeof XMLHttpRequest !== 'undefined')

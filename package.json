@@ -1,6 +1,6 @@
 {
   "name": "djax-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A straightforward services client powered by djax.",
   "main": "djax-client.build.js",
   "scripts": {
@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/Yomguithereal/djax-client",
   "dependencies": {
-    "djax": "^1.1.0",
+    "djax": "^1.2.0",
     "object-assign": "^2.0.0"
   },
   "devDependencies": {
