@@ -49,7 +49,7 @@ gulp.task('build', function() {
     standalone: 'DjaxClient',
   }).transform(babelify)
     .bundle()
-    .pipe(source('djax-client.build.js'))
+    .pipe(source('djax-client.concat.js'))
     .pipe(gulp.dest('./'))
     .pipe(rename('djax-client.min.js'))
     .pipe(buffer())
