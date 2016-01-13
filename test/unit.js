@@ -18,7 +18,11 @@ describe('Client', function() {
         basic: {
           url: '/basic'
         },
-        urlBasic: '/basic'
+        urlBasic: '/basic',
+        nested: {
+          basic: '/basic',
+          other: '/basic'
+        }
       }
     });
 
@@ -86,6 +90,24 @@ describe('Client', function() {
 
     it('should be possible to use the url polymorphism.', function(done) {
       client.urlBasic(function(err, data) {
+        assert(err === null);
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    it('should be possible to nest the services.', function(done) {
+      assert.deepEqual(Object.keys(client.nested), ['basic', 'other']);
+
+      client.nested.other(function(err, data) {
+        assert(err === null);
+        assert.deepEqual(data, {hello: 'world'});
+        done();
+      });
+    });
+
+    it('should be possible to request by path.', function(done) {
+      client.request(['nested', 'basic'], function(err, data) {
         assert(err === null);
         assert.deepEqual(data, {hello: 'world'});
         done();

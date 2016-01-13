@@ -1,6 +1,6 @@
 {
   "name": "djax-client",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A straightforward services client powered by djax.",
   "main": "djax-client.dist.js",
   "scripts": {

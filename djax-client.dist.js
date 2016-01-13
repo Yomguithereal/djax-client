@@ -52,6 +52,36 @@ function isPlainObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date) && !(value instanceof RegExp);
 }
 
+function isNesting(spec) {
+  return isPlainObject(spec) && !spec.url;
+}
+
+function setIn(o, path, value) {
+  for (var i = 0, l = path.length; i < l; i++) {
+    var step = path[i];
+
+    if (i === l - 1) {
+      o[step] = value;
+      return;
+    }
+
+    o[step] = o[step] || {};
+    o = o[step];
+  }
+}
+
+function getIn(o, path) {
+  if (!path) return;
+
+  for (var i = 0, l = path.length; i < l; i++) {
+    var step = path[i];
+
+    o = o[step];
+  }
+
+  return o;
+}
+
 function solve(o, solver, definitions, scope) {
   var s = {},
       k = undefined;
@@ -157,12 +187,21 @@ var Client = (function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
+      name = [].concat(name);
+
+      // Are we nesting?
+      if (isNesting(options)) {
+        for (var k in options) {
+          this.register(name.concat(k), options[k]);
+        }return;
+      }
+
       if (typeof options === 'string') options = { url: options };
 
       var boundOptions = bind(options, this._settings.scope || null);
 
-      this._services[name] = boundOptions;
-      this[name] = function (o, callback) {
+      setIn(this._services, name, boundOptions);
+      var fn = function fn(o, callback) {
         var mergedOptions = isPlainObject(o) ? (0, _objectAssign2['default'])({}, boundOptions, o) : o || {};
 
         if (typeof o === 'function') {
@@ -172,6 +211,8 @@ var Client = (function () {
 
         return _this2.request.call(_this2, name, mergedOptions, callback);
       };
+
+      setIn(this, name, fn);
     }
 
     // Requesting a service
@@ -185,7 +226,7 @@ var Client = (function () {
           callback = options;
         }
 
-        if (typeof name !== 'string') {
+        if (typeof name !== 'string' && !Array.isArray(name)) {
           options = name;
           name = null;
         } else {
@@ -198,17 +239,19 @@ var Client = (function () {
           callback = name;
           name = null;
           options = {};
-        } else if (typeof name === 'object') {
+        } else if (isPlainObject(name)) {
           options = name;
           name = null;
           callback = null;
         }
       }
 
+      if (name) name = [].concat(name);
+
       // Safeguard
       callback = callback || Function.prototype;
 
-      var service = this._services[name];
+      var service = getIn(this._services, name);
 
       if (!service && name) throw Error('djax-client.request: service not found.');
 

@@ -37,6 +37,37 @@ function isPlainObject(value) {
          !(value instanceof RegExp);
 }
 
+function isNesting(spec) {
+  return isPlainObject(spec) && !spec.url;
+}
+
+function setIn(o, path, value) {
+  for (let i = 0, l = path.length; i < l; i++) {
+    let step = path[i];
+
+    if (i === l - 1) {
+      o[step] = value;
+      return;
+    }
+
+    o[step] = o[step] || {};
+    o = o[step];
+  }
+}
+
+function getIn(o, path) {
+  if (!path)
+    return;
+
+  for (let i = 0, l = path.length; i < l; i++) {
+    let step = path[i];
+
+    o = o[step];
+  }
+
+  return o;
+}
+
 function solve(o, solver, definitions, scope) {
   let s = {},
       k;
@@ -127,13 +158,23 @@ export default class Client {
 
   // Registering a service
   register(name, options = {}) {
+    name = [].concat(name);
+
+    // Are we nesting?
+    if (isNesting(options)) {
+      for (const k in options)
+        this.register(name.concat(k), options[k]);
+
+      return;
+    }
+
     if (typeof options === 'string')
       options = {url: options};
 
     const boundOptions = bind(options, this._settings.scope || null);
 
-    this._services[name] = boundOptions;
-    this[name] = (o, callback) => {
+    setIn(this._services, name, boundOptions);
+    const fn = (o, callback) => {
       let mergedOptions = isPlainObject(o) ?
         assign({}, boundOptions, o) :
         o || {};
@@ -145,6 +186,8 @@ export default class Client {
 
       return this.request.call(this, name, mergedOptions, callback);
     };
+
+    setIn(this, name, fn);
   }
 
   // Requesting a service
@@ -156,7 +199,7 @@ export default class Client {
         callback = options;
       }
 
-      if (typeof name !== 'string') {
+      if (typeof name !== 'string' && !Array.isArray(name)) {
         options = name;
         name = null;
       }
@@ -171,17 +214,20 @@ export default class Client {
         name = null;
         options = {};
       }
-      else if (typeof name === 'object') {
+      else if (isPlainObject(name)) {
         options = name;
         name = null;
         callback = null;
       }
     }
 
+    if (name)
+      name = [].concat(name);
+
     // Safeguard
     callback = callback || Function.prototype;
 
-    const service = this._services[name];
+    const service = getIn(this._services, name);
 
     if (!service && name)
       throw Error('djax-client.request: service not found.');
