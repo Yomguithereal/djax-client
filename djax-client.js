@@ -10,7 +10,11 @@ import assign from 'object-assign';
 /**
  * Defaults
  */
-const blackList = x => !!~['beforeSend', 'success', 'error'].indexOf(x);
+const BLACKLIST = {
+  beforeSend: true,
+  error: true,
+  success: true
+};
 
 const DEFAULTS = {
   params: {}
@@ -38,7 +42,7 @@ function solve(o, solver, definitions, scope) {
       k;
 
   for (k in o) {
-    if (typeof o[k] === 'function' && !blackList(k)) {
+    if (typeof o[k] === 'function' && !BLACKLIST[k]) {
       s[k] = o[k].call(scope);
     }
     else if (typeof o[k] === 'string') {
@@ -77,7 +81,7 @@ function bind(o, scope) {
       k;
 
   for (k in o) {
-    if (blackList(k) && typeof o[k] === 'function')
+    if (BLACKLIST[k] && typeof o[k] === 'function')
       b[k] = o[k].bind(scope);
     else
       b[k] = o[k];

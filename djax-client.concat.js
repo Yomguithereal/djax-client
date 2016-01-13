@@ -30,8 +30,10 @@ var _objectAssign2 = _interopRequireDefault(_objectAssign);
 /**
  * Defaults
  */
-var blackList = function blackList(x) {
-  return !! ~['beforeSend', 'success', 'error'].indexOf(x);
+var BLACKLIST = {
+  beforeSend: true,
+  error: true,
+  success: true
 };
 
 var DEFAULTS = {
@@ -56,7 +58,7 @@ function solve(o, solver, definitions, scope) {
       k = undefined;
 
   for (k in o) {
-    if (typeof o[k] === 'function' && !blackList(k)) {
+    if (typeof o[k] === 'function' && !BLACKLIST[k]) {
       s[k] = o[k].call(scope);
     } else if (typeof o[k] === 'string') {
 
@@ -93,7 +95,7 @@ function bind(o, scope) {
       k = undefined;
 
   for (k in o) {
-    if (blackList(k) && typeof o[k] === 'function') b[k] = o[k].bind(scope);else b[k] = o[k];
+    if (BLACKLIST[k] && typeof o[k] === 'function') b[k] = o[k].bind(scope);else b[k] = o[k];
   }
 
   return b;
