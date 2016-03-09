@@ -263,7 +263,7 @@ var Client = (function () {
       if (!ajaxOptions.url) throw Error('djax-client.request: no url was provided.');
 
       // Solving
-      ajaxOptions = solve(ajaxOptions, this._settings.solver, (0, _objectAssign2['default'])({}, options.params, this._defaults.params), this._settings.scope || null);
+      ajaxOptions = solve(ajaxOptions, this._settings.solver, (0, _objectAssign2['default'])({}, this._defaults.params, options.params), this._settings.scope || null);
 
       if (this._settings.baseUrl) ajaxOptions.url = joinUrls(this._settings.baseUrl, ajaxOptions.url);
 

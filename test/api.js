@@ -19,6 +19,11 @@ app.get('/basic', function(req, res) {
   return res.json({hello: 'world'});
 });
 
+// Basic rout
+app.get('/basic2', function(req, res) {
+  return res.json({hello: 'again'});
+});
+
 app.post('/data', function(req, res) {
   return res.json(req.body);
 });

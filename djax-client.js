@@ -247,7 +247,7 @@ export default class Client {
     ajaxOptions = solve(
       ajaxOptions,
       this._settings.solver,
-      assign({}, options.params, this._defaults.params),
+      assign({}, this._defaults.params, options.params),
       this._settings.scope || null
     );
 
