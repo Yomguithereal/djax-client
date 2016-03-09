@@ -184,6 +184,16 @@ describe('Client', function() {
       });
     });
 
+    it('should be possible to solve overriden parameters.', function(done) {
+      client.basicWithDefinition(
+        { params: { fragment: 'basic2' } },
+        function(err, data) {
+          assert.deepEqual(data, {hello: 'again'});
+          done();
+        }
+      );
+    });
+
     it('should be possible to solve function definitions.', function(done) {
       client.basicWithFunctionDefinition(function(err, data) {
         assert.deepEqual(data, {hello: 'world'});
