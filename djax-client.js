@@ -23,7 +23,7 @@ const DEFAULTS = {
 const DEFAULT_SETTINGS = {
   baseUrl: null,
   engine: djax,
-  solver: /\:([^/:]+)/g
+  solver: /\:([^/:\?]+)/g
 };
 
 /**

@@ -42,7 +42,7 @@ var DEFAULTS = {
 var DEFAULT_SETTINGS = {
   baseUrl: null,
   engine: _djax2['default'],
-  solver: /\:([^/:]+)/g
+  solver: /\:([^/:\?]+)/g
 };
 
 /**

@@ -15,7 +15,7 @@ var client = new Client({
     baseUrl: 'http://localhost:8000',
     engine: $.ajax,
     scope: null,
-    solver: /\:([^/:]+)/g
+    solver: /\:([^/:\?]+)/g
   },
 
   // Default call options
